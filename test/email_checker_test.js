@@ -211,14 +211,13 @@ describe("Email Checker", function () {
       });
 
       it("expect to return promise with valid options", function (done) {
-        m.checker.email = "johndoe@gmail.com";
+        m.checker.email = "djalma@gmail.com";
         m.checker.connect(function () {
           m.checker.validate()
             .then(function (validation) {
-              console.log(m.checker.state);
               expect(validation.isValid).true;
               expect(validation.domain).equal("gmail.com");
-              expect(validation.email).equal("johndoe@gmail.com");
+              expect(validation.email).equal("djalma@gmail.com");
               done();
 
             }).fail(function (err) {
