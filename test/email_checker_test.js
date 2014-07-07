@@ -1,3 +1,4 @@
+var net = require('net');
 var EmailChecker = require('../lib/email_checker');
 var expect = require("chai").expect;
 var fakeDNS = {
@@ -63,5 +64,15 @@ describe("Email Checker", function () {
     it("expect to return the email domain", function () {
       expect(m.checker.getDomain()).equal("gmail.com");
     });
+  });
+
+  describe("#newSocket", function () {
+    it("expect to return an instance of net.Socket module", function () {
+      expect(m.checker.newSocket()).to.be.an.instanceof(net.Socket);
+    });
+  });
+
+  describe("#bindEvents", function () {
+    it("expect to call connect method on the client");
   });
 });
