@@ -24,7 +24,8 @@
   },
   "homepage": "https://github.com/djalmaaraujo/email-check-service",
   "dependencies": {
-    "express": "^4.5.1"
+    "express": "^4.5.1",
+    "q": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^1.9.1",

@@ -35,8 +35,8 @@ describe("Email Checker", function () {
 
   describe("Connection Tests", function () {
     beforeEach(function () {
-      m.checker.connection.dnsHandler = support.fakeDNS;
-      m.checker.connection.socketClient = new support.netSocket();
+      m.checker.connection.dnsHandler = dns;
+      m.checker.connection.socketClient = new net.Socket();
     });
 
     describe("#resolveMX", function () {
@@ -85,18 +85,6 @@ describe("Email Checker", function () {
         m.checker.destroy();
         expect(spy.called).true;
         done();
-      });
-    });
-
-    describe("#listen", function () {
-      it("expect to call data listener", function (done) {
-        m.checker.connect(function () {
-          var spy = sinon.spy(m.checker.connection.socketClient, "on");
-
-          m.checker.listen();
-          expect(spy.called).true;
-          done();
-        });
       });
     });
 
@@ -158,13 +146,10 @@ describe("Email Checker", function () {
       describe("with the result state", function () {
         it("expect to destroy the client session if the email is valid", function (done) {
           m.checker.connect(function () {
-            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
-
             m.checker.connection.state = "result";
             m.checker.parseStatus(250);
 
-            expect(spy.called).true;
-            expect(m.checker.connection.state).equal("helo");
+            expect(m.checker.connection.state).equal("done");
             expect(m.checker.validation.isValid).true;
             expect(m.checker.validation.domain).equal("gmail.com");
             expect(m.checker.validation.email).equal("djalma@gmail.com");
@@ -174,33 +159,71 @@ describe("Email Checker", function () {
       });
 
       describe("with the errors status", function () {
-        it("expect to destroy the session when 555 (bad syntax) status is present", function (done) {
+        it("expect set the state as error when 555 (bad syntax) status is present", function (done) {
           m.checker.connect(function () {
-          var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
+            m.checker.parseStatus(555);
+            expect(m.checker.connection.state).equal("error");
+            done();
+          });
+        });
 
-          m.checker.parseStatus(555);
+        it("expect set the state as error when 502 (bad command) status is present", function (done) {
+          m.checker.connect(function () {
+            m.checker.parseStatus(502);
+            expect(m.checker.connection.state).equal("error");
+            done();
+          });
+        });
+
+        it("expect set the state as error when 550 (email invalid) status is present", function (done) {
+          m.checker.connect(function () {
+            m.checker.parseStatus(550);
+            expect(m.checker.connection.state).equal("error");
+            done();
+          });
+        });
+      });
+    });
+
+    describe("#validate", function () {
+      it("expect to call data listener", function (done) {
+        m.checker.connect(function () {
+          var spy = sinon.spy(m.checker.connection.socketClient, "on");
+
+          m.checker.validate();
           expect(spy.called).true;
           done();
+        });
+      });
+
+      it("expect to return promise with invalid options", function (done) {
+        m.checker.email = "asdadas#222000-@gmail.com";
+        m.checker.connect(function () {
+          m.checker.validate()
+            .then(function (validation) {
+              expect(validation.isValid).false;
+              done();
+
+            }).fail(function (err) {
+              done(err);
           });
         });
+      });
 
-        it("expect to destroy the session when 502 (bad command) status is present", function (done) {
-          m.checker.connect(function () {
-            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
+      it.only("expect to return promise with valid options", function (done) {
+        m.checker.email = "johndoe@gmail.com";
+        m.checker.connect(function () {
+          m.checker.validate()
+            .then(function (validation) {
+              console.log(m.checker.state);
+              expect(validation.isValid).true;
+              expect(validation.domain).equal("gmail.com");
+              expect(validation.email).equal("johndoe@gmail.com");
+              done();
 
-            m.checker.parseStatus(502);
-            expect(spy.called).true;
-            done();
-          });
-        });
-
-        it("expect to destroy the session when 550 (email invalid) status is present", function (done) {
-          m.checker.connect(function () {
-            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
-
-            m.checker.parseStatus(550);
-            expect(spy.called).true;
-            done();
+            }).fail(function (err) {
+              console.log(err);
+              done(err);
           });
         });
       });
