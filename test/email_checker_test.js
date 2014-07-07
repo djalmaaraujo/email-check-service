@@ -3,6 +3,7 @@ var dns = require('dns');
 var expect = require("chai").expect;
 var support = require('./test_helper');
 var EmailChecker = support.EmailChecker;
+var sinon = require('sinon');
 
 describe("Email Checker", function () {
   var m = {};
@@ -21,6 +22,12 @@ describe("Email Checker", function () {
       expect(m.checker.connection.socketHandler).null;
       expect(m.checker.connection.port).equal(25);
       expect(m.checker.connection.domain).equal('gmail.com');
+    });
+
+    it("expect to have edfault informations about the validation", function () {
+      expect(m.checker.validation.isValid).false;
+      expect(m.checker.validation.email).equal(null);
+      expect(m.checker.validation.domain).equal(null);
     });
   });
 
@@ -66,7 +73,7 @@ describe("Email Checker", function () {
 
     describe("#bindEvents", function () {
       it("expect to call connect method on the client", function () {
-
+        expect();
       });
     });
   });
