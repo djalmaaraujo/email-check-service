@@ -210,7 +210,7 @@ describe("Email Checker", function () {
         });
       });
 
-      it.only("expect to return promise with valid options", function (done) {
+      it("expect to return promise with valid options", function (done) {
         m.checker.email = "johndoe@gmail.com";
         m.checker.connect(function () {
           m.checker.validate()
