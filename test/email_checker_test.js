@@ -71,8 +71,16 @@ describe("Email Checker", function () {
       it("expect to connect to the socket server using one of the existing servers and port", function (done) {
         var spy = sinon.spy(m.checker.connection.socketClient, "connect");
 
-        m.checker.connect(function () {
+        m.checker.connect().then(function () {
           expect(spy.alwaysCalledWith(25, m.checker.servers[0].exchange)).true;
+          done();
+        });
+      });
+
+      it("expect to dont connect a bad hostname", function (done) {
+        m.checker.email = "bademail@pool.coconut";
+
+        m.checker.connect().fail(function () {
           done();
         });
       });
@@ -90,7 +98,7 @@ describe("Email Checker", function () {
 
     describe("#send", function () {
       it("expect to write on the client socket", function (done) {
-        m.checker.connect(function () {
+        m.checker.connect().then(function () {
           var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
           m.checker.send("cmd");
@@ -103,7 +111,7 @@ describe("Email Checker", function () {
     describe("#parseStatus", function () {
       describe("with the helo state", function () {
         it("expect to send helo hi command when status code is 220", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
             m.checker.connection.state = "helo";
@@ -117,7 +125,7 @@ describe("Email Checker", function () {
 
       describe("with the mail_from state", function () {
         it("expect to send mail from: email command when status code is 250", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
             m.checker.connection.state = "mail_from";
@@ -131,7 +139,7 @@ describe("Email Checker", function () {
 
       describe("with the rcpt_to state", function () {
         it("expect to send mail rcpt to: email command when status code is 250", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
             m.checker.connection.state = "rcpt_to";
@@ -145,7 +153,7 @@ describe("Email Checker", function () {
 
       describe("with the result state", function () {
         it("expect to destroy the client session if the email is valid", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             m.checker.connection.state = "result";
             m.checker.parseStatus(250);
 
@@ -160,7 +168,7 @@ describe("Email Checker", function () {
 
       describe("with the errors status", function () {
         it("expect set the state as error when 555 (bad syntax) status is present", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             m.checker.parseStatus(555);
             expect(m.checker.connection.state).equal("done");
             done();
@@ -168,7 +176,7 @@ describe("Email Checker", function () {
         });
 
         it("expect set the state as error when 502 (bad command) status is present", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             m.checker.parseStatus(502);
             expect(m.checker.connection.state).equal("done");
             done();
@@ -176,7 +184,7 @@ describe("Email Checker", function () {
         });
 
         it("expect set the state as error when 550 (email invalid) status is present", function (done) {
-          m.checker.connect(function () {
+          m.checker.connect().then(function () {
             m.checker.parseStatus(550);
             expect(m.checker.connection.state).equal("done");
             done();
@@ -187,7 +195,7 @@ describe("Email Checker", function () {
 
     describe("#validate", function () {
       it("expect to call data listener", function (done) {
-        m.checker.connect(function () {
+        m.checker.connect().then(function () {
           var spy = sinon.spy(m.checker.connection.socketClient, "on");
 
           m.checker.validate();
@@ -197,8 +205,8 @@ describe("Email Checker", function () {
       });
 
       it("expect to return promise with invalid options", function (done) {
-        m.checker.email = "asdadas#222000-@gmail.com";
-        m.checker.connect(function () {
+        m.checker.email = "asdadas#222000-@yahoo.com";
+        m.checker.connect().then(function () {
           m.checker.validate().fail(function (validation) {
             expect(validation.isValid).false;
             done();
@@ -208,7 +216,7 @@ describe("Email Checker", function () {
 
       it("expect to return promise with valid options", function (done) {
         m.checker.email = "djalma@gmail.com";
-        m.checker.connect(function () {
+        m.checker.connect().then(function () {
           m.checker.validate()
             .then(function (validation) {
               expect(validation.isValid).true;
@@ -216,8 +224,8 @@ describe("Email Checker", function () {
               expect(validation.email).equal("djalma@gmail.com");
               done();
 
-            }).fail(function (err) {
-              done(err);
+            }).fail(function() {
+              done();
           });
         });
       });
