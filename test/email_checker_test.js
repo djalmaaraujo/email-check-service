@@ -11,6 +11,8 @@ var fakeDNS = {
   }
 }
 
+var statusCodes =
+
 describe("Email Checker", function () {
   var m = {};
 
@@ -21,6 +23,11 @@ describe("Email Checker", function () {
   describe("#constructor", function () {
     it("expect to receive a email as a parameter", function () {
       expect(m.checker.email).equal("mydumb@gmail.com");
+    });
+
+    it("expect to have default options for the connection", function () {
+      expect(m.checker.connection.port).equal(25);
+      expect(m.checker.connection.domain).equal('gmail.com');
     });
   });
 
