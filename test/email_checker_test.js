@@ -19,7 +19,7 @@ describe("Email Checker", function () {
 
     it("expect to have default options for the connection", function () {
       expect(m.checker.connection.dnsHandler).null;
-      expect(m.checker.connection.socketHandler).null;
+      expect(m.checker.connection.socketClient).null;
       expect(m.checker.connection.port).equal(25);
       expect(m.checker.connection.domain).equal('gmail.com');
     });
@@ -34,7 +34,7 @@ describe("Email Checker", function () {
   describe("Connection Tests", function () {
     beforeEach(function () {
       m.checker.connection.dnsHandler = support.fakeDNS;
-      m.checker.connection.socketHandler = net.Socket;
+      m.checker.connection.socketClient = new net.Socket();
     });
 
     describe("#resolveMX", function () {
@@ -65,15 +65,23 @@ describe("Email Checker", function () {
       });
     });
 
-    describe("#newSocket", function () {
-      it("expect to return an instance of net.Socket module", function () {
-        expect(m.checker.newSocket()).to.be.an.instanceof(net.Socket);
+    describe("#connect", function () {
+      it("expect to connect to the socket server using one of the existing servers and port", function (done) {
+        var spy = sinon.spy(m.checker.connection.socketClient, 'connect');
+
+        m.checker.connect();
+        expect(spy.calledWith(25, support.servers[0].exchange)).true
+        done();
       });
     });
 
-    describe("#bindEvents", function () {
-      it("expect to call connect method on the client", function () {
-        expect();
+    describe("#destroy", function () {
+      it("expect to destroy the client socket", function (done) {
+        var spy = sinon.spy(m.checker.connection.socketClient, 'destroy');
+
+        m.checker.destroy();
+        expect(spy.called).true
+        done();
       });
     });
   });
