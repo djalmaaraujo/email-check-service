@@ -1,12 +1,13 @@
 var net = require('net');
+var dns = require('dns');
 var EmailChecker = require('../lib/email_checker');
 var expect = require("chai").expect;
 var fakeDNS = {
-  resolveMX: function (domain, callback) {
+  resolveMx: function (domain, callback) {
     var servers = [
-    'gmail-smtp-in.l.google.com',
-    'alt2.gmail-smtp-in.l.google.com',
-    'alt4.gmail-smtp-in.l.google.com'];
+    { exchange: 'gmail-smtp-in.l.google.com', priority: 5 },
+    { exchange: 'alt3.gmail-smtp-in.l.google.com', priority: 30 },
+    { exchange: 'alt2.gmail-smtp-in.l.google.com', priority: 20 }];
 
     callback(null, servers);
   }
@@ -27,12 +28,17 @@ describe("Email Checker", function () {
     });
 
     it("expect to have default options for the connection", function () {
+      expect(m.checker.connection.dnsHandler).null;
       expect(m.checker.connection.port).equal(25);
       expect(m.checker.connection.domain).equal('gmail.com');
     });
   });
 
   describe("#resolveMX", function () {
+    beforeEach(function () {
+      m.checker.connection.dnsHandler = fakeDNS;
+    });
+
     it("expect to return an empty array of servers for no email", function (done) {
       dumbChecker = new EmailChecker();
       dumbChecker.resolveMX(function (servers) {
@@ -72,7 +78,9 @@ describe("Email Checker", function () {
     });
   });
 
-  describe("#bindEvents", function () {
-    it("expect to call connect method on the client");
-  });
+  // describe("#bindEvents", function () {
+  //   it("expect to call connect method on the client", function () {
+  //     expect(m.checker.bindEvents()).
+  //   });
+  // });
 });
