@@ -39,17 +39,17 @@ describe("Email Checker", function () {
       m.checker.connection.socketClient = new net.Socket();
     });
 
-    describe("#resolveMX", function () {
+    describe("#resolveMx", function () {
       it("expect to return an empty array of servers for no email", function (done) {
         dumbChecker = new EmailChecker();
-        dumbChecker.resolveMX(function (servers) {
+        dumbChecker.resolveMx(function (servers) {
           expect(servers).to.be.empty;
           done();
         });
       });
 
       it("expect to return an array of servers for a valid email", function (done) {
-        m.checker.resolveMX(function (servers) {
+        m.checker.resolveMx(function (servers) {
           expect(servers).to.not.be.empty;
           done();
         });
@@ -58,7 +58,7 @@ describe("Email Checker", function () {
       it("expect to return an array of servers for gmail mx recors", function (done) {
         m.checker.email = "steve@gmail.com";
 
-        m.checker.resolveMX(function (servers) {
+        m.checker.resolveMx(function (servers) {
           expect(servers).to.include({ exchange: "gmail-smtp-in.l.google.com", priority: 5 });
           expect(servers).to.include({ exchange: "alt3.gmail-smtp-in.l.google.com", priority: 30 });
           expect(servers).to.include({ exchange: "alt2.gmail-smtp-in.l.google.com", priority: 20 });
@@ -205,12 +205,23 @@ describe("Email Checker", function () {
       });
 
       it("expect to return promise with invalid options", function (done) {
-        m.checker.email = "asdadas#222000-@yahoo.com";
-        m.checker.connect().then(function () {
+        m.checker.email = "a";
+        m.checker.connect().fail(function () {
+          done();
+        });
+      });
+
+      it("expect to return promise with valid domain but non-existing email", function (done) {
+        m.checker.email = "somebodywilltellyou@tanlup.com";
+        m.checker.connect().then(function (a) {
           m.checker.validate().fail(function (validation) {
             expect(validation.isValid).false;
             done();
           });
+
+        }).fail(function () {
+          console.log(validation);
+          done();
         });
       });
 
