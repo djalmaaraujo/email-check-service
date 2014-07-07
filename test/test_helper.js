@@ -11,5 +11,15 @@ module.exports = {
       callback(null, servers);
     }
   },
+  netSocket: function () {
+    this.connect = function (a,b,cb) {
+      cb();
+    };
+
+    this.destroy = function () {};
+    this.write = function () {};
+    this.on = function () {};
+  },
+
   servers: servers
 };

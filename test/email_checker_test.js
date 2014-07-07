@@ -9,12 +9,13 @@ describe("Email Checker", function () {
   var m = {};
 
   beforeEach(function () {
-    m.checker = new EmailChecker("mydumb@gmail.com");
+    m = {};
+    m.checker = new EmailChecker("djalma@gmail.com");
   });
 
   describe("#constructor", function () {
     it("expect to receive a email as a parameter", function () {
-      expect(m.checker.email).equal("mydumb@gmail.com");
+      expect(m.checker.email).equal("djalma@gmail.com");
     });
 
     it("expect to have default options for the connection", function () {
@@ -35,7 +36,7 @@ describe("Email Checker", function () {
   describe("Connection Tests", function () {
     beforeEach(function () {
       m.checker.connection.dnsHandler = support.fakeDNS;
-      m.checker.connection.socketClient = new net.Socket();
+      m.checker.connection.socketClient = new support.netSocket();
     });
 
     describe("#resolveMX", function () {
@@ -70,9 +71,10 @@ describe("Email Checker", function () {
       it("expect to connect to the socket server using one of the existing servers and port", function (done) {
         var spy = sinon.spy(m.checker.connection.socketClient, "connect");
 
-        m.checker.connect();
-        expect(spy.calledWith(25, support.servers[0].exchange)).true
-        done();
+        m.checker.connect(function () {
+          expect(spy.alwaysCalledWith(25, m.checker.servers[0].exchange)).true;
+          done();
+        });
       });
     });
 
@@ -81,115 +83,125 @@ describe("Email Checker", function () {
         var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
 
         m.checker.destroy();
-        expect(spy.called).true
+        expect(spy.called).true;
         done();
       });
     });
 
     describe("#listen", function () {
       it("expect to call data listener", function (done) {
-        var spy = sinon.spy(m.checker.connection.socketClient, "on");
+        m.checker.connect(function () {
+          var spy = sinon.spy(m.checker.connection.socketClient, "on");
 
-        m.checker.listen();
-        expect(spy.called).true
-        done();
+          m.checker.listen();
+          expect(spy.called).true;
+          done();
+        });
       });
     });
 
     describe("#send", function () {
       it("expect to write on the client socket", function (done) {
-        m.checker.connect();
-        var spy = sinon.spy(m.checker.connection.socketClient, "write");
+        m.checker.connect(function () {
+          var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
-        m.checker.send("cmd");
-        expect(spy.calledWith("cmd")).true
-        done();
+          m.checker.send("cmd");
+          expect(spy.calledWith("cmd")).true;
+          done();
+        });
       });
     });
 
     describe("#parseStatus", function () {
       describe("with the helo state", function () {
         it("expect to send helo hi command when status code is 220", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "write");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
-          m.checker.connection.state = "helo";
-          m.checker.parseStatus(220);
-          expect(spy.calledWith('helo hi \n')).true
-          expect(m.checker.connection.state).equal("mail_from");
-          done();
+            m.checker.connection.state = "helo";
+            m.checker.parseStatus(220);
+            expect(spy.calledWith('helo hi \n')).true;
+            expect(m.checker.connection.state).equal("mail_from");
+            done();
+          });
         });
       });
 
       describe("with the mail_from state", function () {
         it("expect to send mail from: email command when status code is 250", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "write");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
-          m.checker.connection.state = "mail_from";
-          m.checker.parseStatus(250);
-          expect(spy.calledWith('mail from: <mydumb@gmail.com> \n')).true
-          expect(m.checker.connection.state).equal("rcpt_to");
-          done();
+            m.checker.connection.state = "mail_from";
+            m.checker.parseStatus(250);
+            expect(spy.calledWith('mail from: <djalma@gmail.com> \n')).true;
+            expect(m.checker.connection.state).equal("rcpt_to");
+            done();
+          });
         });
       });
 
       describe("with the rcpt_to state", function () {
         it("expect to send mail rcpt to: email command when status code is 250", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "write");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "write");
 
-          m.checker.connection.state = "rcpt_to";
-          m.checker.parseStatus(250);
-          expect(spy.calledWith('rcpt to: <mydumb@gmail.com> \n')).true
-          expect(m.checker.connection.state).equal("result");
-          done();
+            m.checker.connection.state = "rcpt_to";
+            m.checker.parseStatus(250);
+            expect(spy.calledWith('rcpt to: <djalma@gmail.com> \n')).true;
+            expect(m.checker.connection.state).equal("result");
+            done();
+          });
         });
       });
 
       describe("with the result state", function () {
         it("expect to destroy the client session if the email is valid", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
 
-          m.checker.connection.state = "result";
-          m.checker.parseStatus(250);
+            m.checker.connection.state = "result";
+            m.checker.parseStatus(250);
 
-          expect(spy.called).true
-          expect(m.checker.connection.state).equal("helo");
-          expect(m.checker.validation.isValid).true;
-          expect(m.checker.validation.domain).equal("gmail.com");
-          expect(m.checker.validation.email).equal("mydumb@gmail.com");
-          done();
+            expect(spy.called).true;
+            expect(m.checker.connection.state).equal("helo");
+            expect(m.checker.validation.isValid).true;
+            expect(m.checker.validation.domain).equal("gmail.com");
+            expect(m.checker.validation.email).equal("djalma@gmail.com");
+            done();
+          });
         });
       });
 
       describe("with the errors status", function () {
         it("expect to destroy the session when 555 (bad syntax) status is present", function (done) {
-          m.checker.connect();
+          m.checker.connect(function () {
           var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
 
           m.checker.parseStatus(555);
-          expect(spy.called).true
-          done()
+          expect(spy.called).true;
+          done();
+          });
         });
 
         it("expect to destroy the session when 502 (bad command) status is present", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
 
-          m.checker.parseStatus(502);
-          expect(spy.called).true
-          done()
+            m.checker.parseStatus(502);
+            expect(spy.called).true;
+            done();
+          });
         });
 
         it("expect to destroy the session when 550 (email invalid) status is present", function (done) {
-          m.checker.connect();
-          var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
+          m.checker.connect(function () {
+            var spy = sinon.spy(m.checker.connection.socketClient, "destroy");
 
-          m.checker.parseStatus(550);
-          expect(spy.called).true
-          done()
+            m.checker.parseStatus(550);
+            expect(spy.called).true;
+            done();
+          });
         });
       });
     });
