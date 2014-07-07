@@ -162,7 +162,7 @@ describe("Email Checker", function () {
         it("expect set the state as error when 555 (bad syntax) status is present", function (done) {
           m.checker.connect(function () {
             m.checker.parseStatus(555);
-            expect(m.checker.connection.state).equal("error");
+            expect(m.checker.connection.state).equal("done");
             done();
           });
         });
@@ -170,7 +170,7 @@ describe("Email Checker", function () {
         it("expect set the state as error when 502 (bad command) status is present", function (done) {
           m.checker.connect(function () {
             m.checker.parseStatus(502);
-            expect(m.checker.connection.state).equal("error");
+            expect(m.checker.connection.state).equal("done");
             done();
           });
         });
@@ -178,7 +178,7 @@ describe("Email Checker", function () {
         it("expect set the state as error when 550 (email invalid) status is present", function (done) {
           m.checker.connect(function () {
             m.checker.parseStatus(550);
-            expect(m.checker.connection.state).equal("error");
+            expect(m.checker.connection.state).equal("done");
             done();
           });
         });
@@ -199,13 +199,9 @@ describe("Email Checker", function () {
       it("expect to return promise with invalid options", function (done) {
         m.checker.email = "asdadas#222000-@gmail.com";
         m.checker.connect(function () {
-          m.checker.validate()
-            .then(function (validation) {
-              expect(validation.isValid).false;
-              done();
-
-            }).fail(function (err) {
-              done(err);
+          m.checker.validate().fail(function (validation) {
+            expect(validation.isValid).false;
+            done();
           });
         });
       });
@@ -221,7 +217,6 @@ describe("Email Checker", function () {
               done();
 
             }).fail(function (err) {
-              console.log(err);
               done(err);
           });
         });
