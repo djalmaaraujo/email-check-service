@@ -211,6 +211,13 @@ describe("Email Checker", function () {
         });
       });
 
+      it("expect to return promise with invalid options", function (done) {
+        m.checker.email = "crazy@domainpool";
+        m.checker.connect().fail(function () {
+          done();
+        });
+      });
+
       it("expect to return promise with valid domain but non-existing email", function (done) {
         m.checker.email = "somebodywilltellyou@tanlup.com";
         m.checker.connect().then(function (a) {

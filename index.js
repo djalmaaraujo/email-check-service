@@ -7,21 +7,22 @@ var socketClient = new net.Socket();
 var EmailChecker = require("./lib/email_checker");
 
 app.get("/validate/:email", function(req, res){
-  var EmailClient = new EmailChecker(req.params.email);
+  var email = req.params.email;
+  var EmailClient = new EmailChecker(email);
 
   EmailClient.connect(dns, socketClient).then(function () {
-    EmailClient.validate().then(function(validation) {
+    EmailClient.validate().then(function (validation) {
       res.send(validation);
-
-    }).fail(function (validation) {
-      res.send(validation);
+    })
+    .fail(function (a) {
+      res.send({isValid: false, email: email});
     });
 
-  }).fail(function () {
-    res.send(validation);
+  })
+  .fail(function (a) {
+    res.send({isValid: false, email: email});
   });
 });
-
 
 var server = app.listen(3000, function() {
   console.log('Listening on port %d', server.address().port);
